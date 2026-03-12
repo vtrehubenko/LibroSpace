@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs wc:*)",
+      "WebSearch",
+      "WebFetch(domain:expo.dev)"
+    ]
+  }
+}
