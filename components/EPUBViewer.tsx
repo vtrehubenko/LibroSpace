@@ -140,7 +140,7 @@ export default function EPUBViewer({
 
         // Content hook: fires on every chapter load — injects override stylesheet
         // Also stores the contents ref so we can update styles mid-chapter on theme switch
-        rendition.hooks.content.register((contents: any) => {
+        ;(rendition as any).hooks.content.register((contents: any) => {
           contentsRef.current = contents
           try {
             const doc = contents.document
