@@ -2,23 +2,17 @@
 
 import { motion } from 'framer-motion'
 import type { LibraryFile } from '@prisma/client'
+import { CATEGORY_COLORS, type CategoryColors } from '@/lib/categories'
+import { parseCustomTheme } from '@/lib/themeUtils'
 
-const FORMAT_COLORS: Record<string, { accent: string; from: string; to: string; spine: string }> = {
+const FORMAT_COLORS: Record<string, CategoryColors> = {
   PDF: { accent: '#ef4444', from: '#280808', to: '#4a1208', spine: '#180404' },
   EPUB: { accent: '#3b82f6', from: '#071828', to: '#0a2845', spine: '#040e18' },
 }
 
-const CATEGORY_COLORS: Record<string, { accent: string; from: string; to: string; spine: string }> = {
-  Programming: { accent: '#f59e0b', from: '#181000', to: '#302000', spine: '#0c0800' },
-  Frontend: { accent: '#3b82f6', from: '#071828', to: '#0a2845', spine: '#040e18' },
-  Design: { accent: '#34d399', from: '#001810', to: '#002e1e', spine: '#000e08' },
-  Notes: { accent: '#a78bfa', from: '#0e0020', to: '#1a0038', spine: '#080014' },
-  Science: { accent: '#22d3ee', from: '#001424', to: '#002040', spine: '#000a14' },
-  Fiction: { accent: '#f472b6', from: '#1a0014', to: '#300025', spine: '#0d0009' },
-  History: { accent: '#fb923c', from: '#1a0a00', to: '#301500', spine: '#0d0700' },
-}
-
 function getColors(book: LibraryFile) {
+  const custom = parseCustomTheme((book as any).customTheme)
+  if (custom) return custom
   if (book.category && CATEGORY_COLORS[book.category]) {
     return CATEGORY_COLORS[book.category]
   }
@@ -30,10 +24,11 @@ interface BookCardProps {
   onOpen: (book: LibraryFile) => void
   onToggleFavorite: (book: LibraryFile) => void
   onDelete: (book: LibraryFile) => void
+  onEdit: (book: LibraryFile) => void
   layoutId?: string
 }
 
-export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, layoutId }: BookCardProps) {
+export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, onEdit, layoutId }: BookCardProps) {
   const colors = getColors(book)
   const progress = book.readingProgress ?? 0
 
@@ -78,7 +73,7 @@ export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, lay
         <motion.button
           initial={{ opacity: 0 }}
           whileHover={{ opacity: 1 }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute top-10 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
           onClick={(e) => {
             e.stopPropagation()
             onToggleFavorite(book)
@@ -95,9 +90,9 @@ export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, lay
           </svg>
         </motion.button>
 
-        {/* Delete button */}
+        {/* Delete button — top right corner */}
         <motion.button
-          className="absolute top-2 left-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
           onClick={(e) => {
             e.stopPropagation()
             onDelete(book)
@@ -108,9 +103,22 @@ export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, lay
           </svg>
         </motion.button>
 
+        {/* Edit button */}
+        <motion.button
+          className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          onClick={(e) => {
+            e.stopPropagation()
+            onEdit(book)
+          }}
+        >
+          <svg className="w-3 h-3 text-bv-text" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </motion.button>
+
         {/* Content overlay */}
         <div className="absolute inset-0 p-3 flex flex-col justify-between pointer-events-none">
-          {/* Format badge */}
+          {/* Format badge — offset right to avoid overlap with delete button on hover */}
           <div className="flex items-start justify-between">
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -190,6 +198,22 @@ export default function BookCard({ book, onOpen, onToggleFavorite, onDelete, lay
               {progress}%
             </span>
           </div>
+          {/* Tags */}
+          {(book as any).tags?.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {(book as any).tags.slice(0, 3).map((tag: string) => (
+                <span
+                  key={tag}
+                  className="text-[9px] px-1.5 py-0.5 rounded-full bg-bv-elevated text-bv-subtle border border-bv-border"
+                >
+                  {tag}
+                </span>
+              ))}
+              {(book as any).tags.length > 3 && (
+                <span className="text-[9px] text-bv-subtle">+{(book as any).tags.length - 3}</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

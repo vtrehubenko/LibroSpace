@@ -1,3 +1,6 @@
+import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import Navbar from '@/components/Navbar'
 import HeroSection from '@/components/HeroSection'
 import FeaturedShelf from '@/components/FeaturedShelf'
@@ -6,7 +9,9 @@ import ReaderPreview from '@/components/ReaderPreview'
 import LibraryDashboard from '@/components/LibraryDashboard'
 import Footer from '@/components/Footer'
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions)
+  if (session) redirect('/library')
   return (
     <main className="min-h-screen bg-bv-bg overflow-x-hidden">
       <Navbar />

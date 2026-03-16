@@ -32,10 +32,29 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const body = await req.json()
 
+  // Validate tags
+  const HEX_RE = /^#[0-9a-fA-F]{6}$/
+  if ('tags' in body) {
+    if (!Array.isArray(body.tags) || body.tags.length > 10 ||
+        body.tags.some((t: unknown) => typeof t !== 'string' || t.length > 30)) {
+      return NextResponse.json({ error: 'Invalid tags' }, { status: 400 })
+    }
+  }
+
+  // Validate customTheme
+  if ('customTheme' in body && body.customTheme !== null) {
+    const t = body.customTheme
+    if (typeof t !== 'object' || !t.accent || !t.from || !t.to || !t.spine ||
+        ![t.accent, t.from, t.to, t.spine].every((c: unknown) => typeof c === 'string' && HEX_RE.test(c))) {
+      return NextResponse.json({ error: 'Invalid customTheme' }, { status: 400 })
+    }
+  }
+
   // Whitelist updatable fields
   const allowed = [
     'title', 'author', 'category', 'readingProgress',
     'currentPage', 'totalPages', 'isFavorite', 'lastOpenedAt',
+    'tags', 'customTheme',
   ]
   const data: Record<string, unknown> = {}
   for (const key of allowed) {

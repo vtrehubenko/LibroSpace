@@ -6,7 +6,6 @@ import dynamic from 'next/dynamic'
 import type { LibraryFile } from '@prisma/client'
 import { toast } from 'sonner'
 
-// Dynamic imports to avoid SSR issues
 const PDFViewer = dynamic(() => import('./PDFViewer'), {
   ssr: false,
   loading: () => <ReaderSkeleton />,
@@ -26,9 +25,17 @@ interface ReaderViewProps {
 
 const THEMES: { id: Theme; label: string; bg: string; text: string }[] = [
   { id: 'dark', label: 'Dark', bg: '#0e0c0a', text: '#f0ebe3' },
-  { id: 'sepia', label: 'Sepia', bg: '#241c0c', text: '#dcc88a' },
-  { id: 'light', label: 'Light', bg: '#f5f0e8', text: '#281e0f' },
+  { id: 'sepia', label: 'Sepia', bg: '#f5e6c8', text: '#5b4636' },
+  { id: 'light', label: 'Light', bg: '#faf6ee', text: '#2c2417' },
 ]
+
+function formatTimeLeft(minutes: number): string {
+  if (minutes < 1) return '< 1m left'
+  if (minutes < 60) return `~${minutes}m left`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m > 0 ? `~${h}h ${m}m left` : `~${h}h left`
+}
 
 export default function ReaderView({ book, onClose, standalone = false }: ReaderViewProps) {
   const [theme, setTheme] = useState<Theme>('dark')
@@ -37,6 +44,10 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
   const [bookmarked, setBookmarked] = useState(false)
   const [showControls, setShowControls] = useState(true)
   const [fontSize, setFontSize] = useState(16)
+  const [readerProgress, setReaderProgress] = useState<{
+    percentage: number
+    estimatedMinutesLeft: number
+  } | null>(null)
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>()
 
@@ -75,7 +86,7 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
             }),
           })
         } catch {
-          // Silent fail — progress will be saved next time
+          // Silent fail
         }
       }, 1500)
     },
@@ -96,7 +107,7 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
     toast.success(bookmarked ? 'Bookmark removed' : `Page ${page} bookmarked`)
   }
 
-  const progress = totalPages > 0 ? Math.round((page / totalPages) * 100) : 0
+  const progress = readerProgress?.percentage ?? (totalPages > 0 ? Math.round((page / totalPages) * 100) : 0)
 
   return (
     <motion.div
@@ -109,11 +120,19 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
       onPointerMove={resetControlsTimer}
       onClick={resetControlsTimer}
     >
+      {/* ── Top progress bar (always visible) ── */}
+      <div className="absolute top-0 left-0 right-0 h-0.5 z-20 select-none">
+        <div
+          className="h-full transition-all duration-500"
+          style={{ width: `${progress}%`, background: '#d4a853' }}
+        />
+      </div>
+
       {/* ── Top toolbar ── */}
       <AnimatePresence>
         {showControls && (
           <motion.div
-            className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-4 py-3"
+            className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 px-4 py-3 select-none"
             style={{
               background: `linear-gradient(to bottom, ${currentTheme.bg}f0 0%, transparent 100%)`,
             }}
@@ -138,31 +157,21 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
               </button>
             )}
 
-            {/* Title + author */}
+            {/* Title + author + progress */}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold truncate" style={{ color: currentTheme.text }}>
                 {book.title}
               </p>
-              {book.author && (
-                <p className="text-xs truncate opacity-50">{book.author}</p>
-              )}
-            </div>
-
-            {/* Progress bar */}
-            <div className="hidden sm:flex items-center gap-2 text-xs opacity-50">
-              <span>
-                {book.format === 'PDF' && totalPages > 0
-                  ? `${page} / ${totalPages}`
-                  : `${progress}%`}
-              </span>
-              <div
-                className="w-24 h-0.5 rounded-full opacity-30"
-                style={{ background: currentTheme.text }}
-              >
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${progress}%`, background: '#d4a853' }}
-                />
+              <div className="flex items-center gap-2">
+                {book.author && (
+                  <p className="text-xs truncate opacity-50">{book.author}</p>
+                )}
+                {readerProgress && (
+                  <p className="text-xs opacity-40 shrink-0">
+                    {readerProgress.percentage}%{' '}
+                    · {formatTimeLeft(readerProgress.estimatedMinutesLeft)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -235,49 +244,34 @@ export default function ReaderView({ book, onClose, standalone = false }: Reader
         {book.format === 'PDF' ? (
           <PDFViewer
             url={book.fileUrl}
+            bookId={book.id}
             initialPage={page}
             theme={theme}
             themeColors={currentTheme}
             onPageChange={handlePageChange}
+            onProgressUpdate={setReaderProgress}
           />
         ) : (
           <EPUBViewer
             url={book.fileUrl}
+            bookId={book.id}
             theme={theme}
             fontSize={fontSize}
             onLocationChange={(pct) => {
               const syntheticPage = Math.round(pct * 1000)
               handlePageChange(syntheticPage, 1000)
             }}
+            onProgressUpdate={setReaderProgress}
           />
         )}
       </div>
-
-      {/* ── Bottom progress bar ── */}
-      <AnimatePresence>
-        {showControls && (
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 h-1 z-10"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <div className="h-full w-full" style={{ background: 'rgba(128,128,128,0.15)' }}>
-              <div
-                className="h-full transition-all duration-500"
-                style={{ width: `${progress}%`, background: '#d4a853' }}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   )
 }
 
 function ReaderSkeleton() {
   return (
-    <div className="flex items-center justify-center w-full h-full">
+    <div className="flex items-center justify-center w-full h-full select-none">
       <div className="flex flex-col items-center gap-4">
         <div className="w-10 h-10 border-2 border-bv-gold/30 border-t-bv-gold rounded-full animate-spin" />
         <p className="text-sm opacity-40">Loading reader…</p>

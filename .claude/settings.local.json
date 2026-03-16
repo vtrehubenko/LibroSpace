@@ -3,7 +3,26 @@
     "allow": [
       "Bash(xargs wc:*)",
       "WebSearch",
-      "WebFetch(domain:expo.dev)"
+      "WebFetch(domain:expo.dev)",
+      "Bash(find C:UsersVovaDesktopProjectsLibroSpacelib -type f \\\\\\(-name *.ts -o -name *.tsx \\\\\\))",
+      "Bash(npx tsc:*)",
+      "Bash(find C:UsersVovaDesktopProjectsLibroSpace -type f \\\\\\(-name globals.css -o -name *.module.css \\\\\\))",
+      "Bash(xargs grep:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Bash(find /c/Users/Vova/Desktop/Projects/LibroSpace -type f \\\\\\(-name *Demo* -o -name *Library* -o -name *Shelf* -o -name *Reader* -o -name *Featured* \\\\\\))",
+      "WebFetch(domain:github.com)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(tasklist)",
+      "Bash(taskkill //F //IM node.exe)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/library)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(ls -la /c/Users/Vova/Desktop/Projects/LibroSpace/app/api/books/[id]/highlights/)",
+      "Bash(find /c/Users/Vova/Desktop/Projects/LibroSpace -name jest.config.* -o -name vitest.config.* -o -name *.test.* -o -name *.spec.*)",
+      "Bash(ls -la /c/Users/Vova/Desktop/Projects/LibroSpace/app/api/books/[id]/highlights/[highlightId]/)",
+      "Bash(netstat -ano)",
+      "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object OwningProcess\")",
+      "Bash(powershell.exe -Command 'Stop-Process -Id 1136 -Force')"
     ]
   }
 }

@@ -16,7 +16,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  books LibraryFile[]
+  books      LibraryFile[]
+  highlights Highlight[]
 }
 
 model LibraryFile {
@@ -27,6 +28,8 @@ model LibraryFile {
   coverUrl        String?
   format          String    // "PDF" | "EPUB"
   category        String?
+  tags            String[]  @default([])
+  customTheme     Json?
   readingProgress Int       @default(0)
   currentPage     Int       @default(1)
   totalPages      Int?
@@ -38,4 +41,22 @@ model LibraryFile {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  highlights Highlight[]
+}
+
+model Highlight {
+  id        String   @id @default(cuid())
+  locator   String
+  text      String
+  color     String   @default("yellow")
+  note      String?
+  bookId    String
+  book      LibraryFile @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bookId, userId])
 }

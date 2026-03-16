@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef, useEffect, useState } from 'react'
-import { motion, useInView, AnimatePresence } from 'framer-motion'
+import { useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 
 const pageLines = {
   left: [
@@ -33,28 +33,17 @@ const pageLines = {
     { w: '89%', o: 0.6 },
     { w: '76%', o: 0.65 },
     { w: '92%', o: 0.55 },
-    { w: '87%', o: 0.6 },
-    { w: '93%', o: 0.65 },
-    { w: '80%', o: 0.6 },
-    { w: '45%', o: 0.5 },
   ],
 }
 
 export default function ReaderPreview() {
   const ref = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
-  const [pageFlipped, setPageFlipped] = useState(false)
   const [readingMode, setReadingMode] = useState<'dark' | 'sepia' | 'light'>('dark')
-
-  useEffect(() => {
-    if (!isInView) return
-    const timer = setTimeout(() => setPageFlipped(true), 1200)
-    return () => clearTimeout(timer)
-  }, [isInView])
 
   const modeColors = {
     dark: { bg: '#0e0c0a', page: '#141210', text: 'rgba(240,235,227,0.75)', line: 'rgba(240,235,227,0.12)' },
-    sepia: { bg: '#1a1408', page: '#241c0c', text: 'rgba(220,190,140,0.8)', line: 'rgba(220,190,140,0.15)' },
+    sepia: { bg: '#e8d5b0', page: '#f5e6c8', text: 'rgba(91,70,54,0.8)', line: 'rgba(91,70,54,0.15)' },
     light: { bg: '#1a1a1a', page: '#f5f0e8', text: 'rgba(40,30,15,0.75)', line: 'rgba(40,30,15,0.12)' },
   }
 
@@ -114,18 +103,18 @@ export default function ReaderPreview() {
                   </svg>
                 </button>
                 <div className="hidden sm:block">
-                  <p className="text-white/70 text-xs font-medium leading-none">Clean Code</p>
-                  <p className="text-white/30 text-[10px] mt-0.5">Chapter 4 — Functions</p>
+                  <p className="text-white/70 text-xs font-medium leading-none">The Call of the Wild</p>
+                  <p className="text-white/30 text-[10px] mt-0.5">Chapter 3 — The Dominant Primordial Beast</p>
                 </div>
               </div>
 
               {/* Center: progress */}
               <div className="flex items-center gap-3 flex-1 max-w-xs mx-4">
-                <span className="text-white/30 text-xs shrink-0">Pg 124</span>
+                <span className="text-white/30 text-xs shrink-0">Pg 68</span>
                 <div className="flex-1 h-1 bg-white/8 rounded-full overflow-hidden">
-                  <div className="h-full w-[28%] bg-bv-gold rounded-full" />
+                  <div className="h-full w-[29%] bg-bv-gold rounded-full" />
                 </div>
-                <span className="text-white/30 text-xs shrink-0">431</span>
+                <span className="text-white/30 text-xs shrink-0">232</span>
               </div>
 
               {/* Right: controls */}
@@ -157,7 +146,7 @@ export default function ReaderPreview() {
 
             {/* Book pages area */}
             <div
-              className="flex justify-center items-start gap-0 py-10 px-4 sm:px-10 min-h-[340px] lg:min-h-[400px]"
+              className="flex justify-center items-stretch gap-0 py-10 px-4 sm:px-10 min-h-[340px] lg:min-h-[400px]"
               style={{ background: mc.bg }}
             >
               {/* Left page */}
@@ -167,7 +156,6 @@ export default function ReaderPreview() {
                   background: mc.page,
                   boxShadow: '4px 0 20px rgba(0,0,0,0.4)',
                   padding: '28px 24px 28px 28px',
-                  minHeight: 320,
                 }}
                 initial={{ opacity: 0, x: -20 }}
                 animate={isInView ? { opacity: 1, x: 0 } : {}}
@@ -176,10 +164,10 @@ export default function ReaderPreview() {
                 {/* Chapter heading */}
                 <div className="mb-5">
                   <p className="text-[10px] font-semibold tracking-[0.15em] uppercase mb-1" style={{ color: '#d4a85370' }}>
-                    Chapter 4
+                    Chapter 3
                   </p>
                   <p className="text-sm font-serif font-bold" style={{ color: mc.text, opacity: 0.9 }}>
-                    Functions
+                    The Dominant Primordial Beast
                   </p>
                 </div>
 
@@ -204,7 +192,7 @@ export default function ReaderPreview() {
 
                 {/* Page number */}
                 <p className="absolute bottom-4 left-0 right-0 text-center text-[10px]" style={{ color: mc.text, opacity: 0.3 }}>
-                  123
+                  67
                 </p>
               </motion.div>
 
@@ -217,83 +205,58 @@ export default function ReaderPreview() {
                 }}
               />
 
-              {/* Right page — page flip animation */}
-              <div className="relative flex-1 max-w-[320px]" style={{ perspective: '1000px' }}>
-                <AnimatePresence>
-                  {pageFlipped ? (
-                    <motion.div
-                      key="page-revealed"
-                      className="rounded-r-sm overflow-hidden"
-                      style={{
-                        background: mc.page,
-                        boxShadow: '-4px 0 20px rgba(0,0,0,0.4)',
-                        padding: '28px 28px 28px 24px',
-                        minHeight: 320,
-                      }}
-                      initial={{ rotateY: -90, opacity: 0 }}
-                      animate={{ rotateY: 0, opacity: 1 }}
-                      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                    >
-                      {/* Highlight block */}
-                      <div
-                        className="mb-5 p-3 rounded-lg border-l-2"
-                        style={{
-                          background: 'rgba(212,168,83,0.07)',
-                          borderColor: 'rgba(212,168,83,0.4)',
-                        }}
-                      >
-                        {[85, 70, 90, 55].map((w, i) => (
-                          <div
-                            key={i}
-                            className="rounded-full mb-1.5 last:mb-0"
-                            style={{ height: 6, width: `${w}%`, background: 'rgba(212,168,83,0.25)' }}
-                          />
-                        ))}
-                      </div>
+              {/* Right page */}
+              <motion.div
+                className="relative flex-1 max-w-[320px] rounded-r-sm overflow-hidden"
+                style={{
+                  background: mc.page,
+                  boxShadow: '-4px 0 20px rgba(0,0,0,0.4)',
+                  padding: '28px 28px 28px 24px',
+                }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                {/* Highlight block */}
+                <div
+                  className="mb-5 p-3 rounded-lg border-l-2"
+                  style={{
+                    background: 'rgba(212,168,83,0.07)',
+                    borderColor: 'rgba(212,168,83,0.4)',
+                  }}
+                >
+                  {[85, 70, 90, 55].map((w, i) => (
+                    <div
+                      key={i}
+                      className="rounded-full mb-1.5 last:mb-0"
+                      style={{ height: 6, width: `${w}%`, background: 'rgba(212,168,83,0.25)' }}
+                    />
+                  ))}
+                </div>
 
-                      {/* Text lines */}
-                      <div className="flex flex-col gap-2.5">
-                        {pageLines.right.map((line, i) => (
-                          <motion.div
-                            key={i}
-                            className="rounded-full"
-                            style={{
-                              height: 7,
-                              width: line.w,
-                              background: mc.line,
-                              opacity: line.o,
-                            }}
-                            initial={{ scaleX: 0, originX: 0 }}
-                            animate={{ scaleX: 1 }}
-                            transition={{ duration: 0.35, delay: 0.05 * i }}
-                          />
-                        ))}
-                      </div>
-
-                      <p className="absolute bottom-4 left-0 right-0 text-center text-[10px]" style={{ color: mc.text, opacity: 0.3 }}>
-                        124
-                      </p>
-                    </motion.div>
-                  ) : (
+                {/* Text lines */}
+                <div className="flex flex-col gap-2.5">
+                  {pageLines.right.map((line, i) => (
                     <motion.div
-                      key="page-turning"
-                      className="rounded-r-sm overflow-hidden flex items-center justify-center"
+                      key={i}
+                      className="rounded-full"
                       style={{
-                        background: mc.page,
-                        minHeight: 320,
-                        padding: '28px',
+                        height: 7,
+                        width: line.w,
+                        background: mc.line,
+                        opacity: line.o,
                       }}
-                      exit={{ rotateY: 90, opacity: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="text-center">
-                        <div className="w-8 h-8 border-2 border-bv-gold/30 border-t-bv-gold rounded-full animate-spin mx-auto mb-3" />
-                        <p className="text-xs" style={{ color: mc.text, opacity: 0.3 }}>Loading page…</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+                      initial={{ scaleX: 0, originX: 0 }}
+                      animate={isInView ? { scaleX: 1 } : {}}
+                      transition={{ duration: 0.4, delay: 0.8 + i * 0.025 }}
+                    />
+                  ))}
+                </div>
+
+                <p className="absolute bottom-4 left-0 right-0 text-center text-[10px]" style={{ color: mc.text, opacity: 0.3 }}>
+                  68
+                </p>
+              </motion.div>
             </div>
 
             {/* Bottom: reading stats bar */}
@@ -302,14 +265,14 @@ export default function ReaderPreview() {
               style={{ borderColor: 'rgba(255,255,255,0.06)', background: 'rgba(0,0,0,0.15)' }}
             >
               <div className="flex items-center gap-4 text-white/30">
-                <span>28% complete</span>
-                <span className="hidden sm:inline">~4h left</span>
+                <span>29% complete</span>
+                <span className="hidden sm:inline">~5h left</span>
               </div>
               <div className="flex items-center gap-2 text-white/30">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
-                <span>Page 124 bookmarked</span>
+                <span>Page 68 bookmarked</span>
               </div>
             </div>
           </div>

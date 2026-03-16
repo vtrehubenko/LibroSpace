@@ -2,19 +2,9 @@
 
 import { useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
+import { demoLibrary } from '@/lib/demoLibrary'
 
-const allBooks = [
-  { id: 1, title: 'Clean Code', author: 'R. C. Martin', type: 'PDF', progress: 68, from: '#280808', to: '#4a1208', accent: '#ef4444', category: 'Programming', size: '8.2 MB', added: '2 days ago' },
-  { id: 2, title: 'JavaScript Patterns', author: 'S. Stefanov', type: 'EPUB', progress: 100, from: '#181000', to: '#302000', accent: '#f59e0b', category: 'Programming', size: '4.1 MB', added: '1 week ago' },
-  { id: 3, title: 'React Handbook', author: 'F. Copes', type: 'PDF', progress: 45, from: '#071828', to: '#0a2845', accent: '#3b82f6', category: 'Frontend', size: '3.7 MB', added: '3 days ago' },
-  { id: 4, title: 'University Notes', author: 'Personal', type: 'PDF', progress: 90, from: '#0e0020', to: '#1a0038', accent: '#a78bfa', category: 'Notes', size: '12.5 MB', added: 'Today' },
-  { id: 5, title: 'Design Systems', author: 'A. Kholmatova', type: 'EPUB', progress: 22, from: '#001810', to: '#002e1e', accent: '#34d399', category: 'Design', size: '6.8 MB', added: '5 days ago' },
-  { id: 6, title: 'TypeScript Dive', author: 'B. Ali Syed', type: 'PDF', progress: 12, from: '#001424', to: '#002040', accent: '#22d3ee', category: 'Programming', size: '9.3 MB', added: '1 week ago' },
-  { id: 7, title: 'You Don\'t Know JS', author: 'Kyle Simpson', type: 'EPUB', progress: 55, from: '#1a0808', to: '#300a0a', accent: '#fb923c', category: 'Programming', size: '5.5 MB', added: '2 weeks ago' },
-  { id: 8, title: 'Atomic Design', author: 'Brad Frost', type: 'PDF', progress: 80, from: '#001418', to: '#002028', accent: '#67e8f9', category: 'Design', size: '7.1 MB', added: '3 weeks ago' },
-]
-
-const tabs = ['All', 'PDF', 'EPUB', 'Notes', 'Favorites']
+const tabs = ['All', 'PDF', 'EPUB', 'Favorites']
 
 export default function LibraryDashboard() {
   const ref = useRef<HTMLDivElement>(null)
@@ -22,11 +12,10 @@ export default function LibraryDashboard() {
   const [activeTab, setActiveTab] = useState('All')
   const [search, setSearch] = useState('')
 
-  const filteredBooks = allBooks.filter((b) => {
+  const filteredBooks = demoLibrary.filter((b) => {
     const matchTab =
       activeTab === 'All' ||
-      activeTab === b.type ||
-      (activeTab === 'Notes' && b.category === 'Notes') ||
+      activeTab === b.format ||
       (activeTab === 'Favorites' && b.progress > 60)
     const matchSearch =
       !search ||
@@ -100,9 +89,9 @@ export default function LibraryDashboard() {
                 { label: 'All Books', count: 24, icon: '📚', active: true },
                 { label: 'Recently Read', count: 6, icon: '🕐', active: false },
                 { label: 'Favorites', count: 8, icon: '♥', active: false },
-                { label: 'Programming', count: 11, icon: '💻', active: false },
-                { label: 'Design', count: 4, icon: '🎨', active: false },
-                { label: 'Notes', count: 3, icon: '📝', active: false },
+                { label: 'Russian Literature', count: 9, icon: '📖', active: false },
+                { label: 'Mystery', count: 5, icon: '🔍', active: false },
+                { label: 'Romance', count: 4, icon: '💐', active: false },
               ].map((item) => (
                 <button
                   key={item.label}
@@ -226,12 +215,11 @@ export default function LibraryDashboard() {
                         className="group relative p-3 rounded-xl border border-bv-border bg-bv-elevated hover:border-bv-border-light cursor-pointer transition-all duration-200"
                         whileHover={{ y: -2 }}
                       >
-                        {/* Mini cover strip */}
+                        {/* Accent color strip */}
                         <div
-                          className="w-full h-1.5 rounded-full mb-3"
+                          className="w-full h-[3px] rounded-full mb-3"
                           style={{
-                            background: `linear-gradient(90deg, ${book.from}, ${book.to})`,
-                            borderLeft: `3px solid ${book.accent}`,
+                            background: `linear-gradient(90deg, ${book.accent}cc, ${book.accent}40, ${book.accent}08)`,
                           }}
                         />
 
@@ -247,15 +235,15 @@ export default function LibraryDashboard() {
                             style={{
                               background: `${book.accent}18`,
                               color: book.accent,
-                              border: `1px solid ${book.accent}25`,
+                              border: `1px solid ${book.accent}35`,
                             }}
                           >
-                            {book.type}
+                            {book.format}
                           </span>
                         </div>
 
                         {/* Progress bar */}
-                        <div className="h-0.5 bg-bv-border rounded-full overflow-hidden mb-1.5">
+                        <div className="h-[3px] bg-bv-border rounded-full overflow-hidden mb-1.5">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${book.progress}%`, background: book.accent }}
@@ -264,12 +252,12 @@ export default function LibraryDashboard() {
 
                         <div className="flex justify-between items-center">
                           <span className="text-[9px] text-bv-subtle">{book.added}</span>
-                          <span className="text-[9px]" style={{ color: book.accent }}>
+                          <span className="text-[9px] font-medium" style={{ color: book.accent }}>
                             {book.progress}%
                           </span>
                         </div>
 
-                        {/* Hover overlay open button */}
+                        {/* Hover overlay */}
                         <div className="absolute inset-0 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-bv-bg/60 backdrop-blur-sm">
                           <span className="text-xs text-bv-gold font-medium flex items-center gap-1">
                             Open

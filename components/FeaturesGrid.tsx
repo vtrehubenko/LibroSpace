@@ -3,6 +3,10 @@
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
 const features = [
   {
     icon: (
@@ -15,6 +19,7 @@ const features = [
       'Native rendering for PDF, EPUB, MOBI, and more. Every format opens beautifully with correct typography and layout.',
     accent: '#f59e0b',
     bg: '#1a1200',
+    scrollTarget: 'reader',
   },
   {
     icon: (
@@ -27,6 +32,7 @@ const features = [
       'Organize your entire library with custom categories, color-coded tags, and nested collections. Find any book instantly.',
     accent: '#a78bfa',
     bg: '#0e0018',
+    scrollTarget: 'library',
   },
   {
     icon: (
@@ -39,6 +45,7 @@ const features = [
       'Bookmark any page, highlight passages, and track your reading progress across every book automatically.',
     accent: '#f87171',
     bg: '#180a0a',
+    scrollTarget: 'shelf',
   },
   {
     icon: (
@@ -51,6 +58,7 @@ const features = [
       'Jump straight back into your last session. Recently opened files are always a single click away.',
     accent: '#22d3ee',
     bg: '#001418',
+    scrollTarget: 'library',
   },
   {
     icon: (
@@ -63,6 +71,7 @@ const features = [
       'Distraction-free reading with customizable fonts, line spacing, sepia, dark, and night modes for every environment.',
     accent: '#34d399',
     bg: '#001810',
+    scrollTarget: 'reader',
   },
   {
     icon: (
@@ -75,6 +84,7 @@ const features = [
       'Full-text search across your entire library. Find any passage, annotation, or document in milliseconds.',
     accent: '#60a5fa',
     bg: '#071828',
+    scrollTarget: 'library',
   },
 ]
 
@@ -130,7 +140,10 @@ export default function FeaturesGrid() {
         >
           {features.map((feature, i) => (
             <motion.div key={i} variants={cardVariants}>
-              <FeatureCard feature={feature} />
+              <FeatureCard
+                feature={feature}
+                onClick={() => scrollToSection(feature.scrollTarget)}
+              />
             </motion.div>
           ))}
         </motion.div>
@@ -139,10 +152,17 @@ export default function FeaturesGrid() {
   )
 }
 
-function FeatureCard({ feature }: { feature: (typeof features)[0] }) {
+function FeatureCard({
+  feature,
+  onClick,
+}: {
+  feature: (typeof features)[0]
+  onClick: () => void
+}) {
   return (
     <motion.div
-      className="group relative p-6 rounded-2xl border border-bv-border bg-bv-elevated cursor-default overflow-hidden"
+      onClick={onClick}
+      className="group relative p-6 rounded-2xl border border-bv-border bg-bv-elevated cursor-pointer overflow-hidden"
       whileHover={{ y: -4, borderColor: `${feature.accent}40` }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
     >
@@ -174,6 +194,20 @@ function FeatureCard({ feature }: { feature: (typeof features)[0] }) {
         {feature.title}
       </h3>
       <p className="text-bv-muted text-sm leading-relaxed">{feature.description}</p>
+
+      {/* Scroll hint — fades in on hover */}
+      <motion.div
+        className="flex items-center gap-1 mt-3 text-xs font-medium"
+        style={{ color: feature.accent }}
+        initial={{ opacity: 0, y: 4 }}
+        whileHover={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        See it in action
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </motion.div>
 
       {/* Bottom accent line on hover */}
       <motion.div

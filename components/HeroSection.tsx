@@ -2,44 +2,46 @@
 
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRef } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 const heroBooks = [
   {
-    title: 'React Handbook',
-    author: 'Flavio Copes',
+    title: 'The Call of the Wild',
+    author: 'Jack London',
     type: 'PDF',
-    from: '#071828',
-    to: '#0a2845',
-    spine: '#040e18',
-    accent: '#60a5fa',
+    from: '#1a1008',
+    to: '#302010',
+    spine: '#0e0804',
+    accent: '#d4a853',
     pos: { x: 0, y: -10, rotY: -28, rotZ: 2, scale: 1 },
     float: { duration: 5, delay: 0 },
   },
   {
-    title: 'Clean Code',
-    author: 'R. C. Martin',
+    title: 'The Master and Margarita',
+    author: 'M. Bulgakov',
     type: 'PDF',
-    from: '#280808',
-    to: '#4a1208',
-    spine: '#180404',
+    from: '#200810',
+    to: '#3a1020',
+    spine: '#140408',
     accent: '#f87171',
     pos: { x: -145, y: 20, rotY: -38, rotZ: -8, scale: 0.86 },
     float: { duration: 6.5, delay: 0.8 },
   },
   {
-    title: 'JS Patterns',
-    author: 'S. Stefanov',
+    title: 'The Hound of the Baskervilles',
+    author: 'A. Conan Doyle',
     type: 'EPUB',
-    from: '#181000',
-    to: '#302000',
-    spine: '#0c0800',
-    accent: '#fbbf24',
+    from: '#0c1420',
+    to: '#182838',
+    spine: '#060a10',
+    accent: '#60a5fa',
     pos: { x: 145, y: 30, rotY: -20, rotZ: 7, scale: 0.86 },
     float: { duration: 5.8, delay: 1.4 },
   },
   {
-    title: 'Design Systems',
-    author: 'A. Kholmatova',
+    title: 'Pride and Prejudice',
+    author: 'Jane Austen',
     type: 'EPUB',
     from: '#001810',
     to: '#002e1e',
@@ -50,14 +52,33 @@ const heroBooks = [
   },
 ]
 
+function scrollToSection(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+}
+
 export default function HeroSection() {
   const ref = useRef<HTMLElement>(null)
+  const { data: session } = useSession()
+  const router = useRouter()
+
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
   })
   const contentY = useTransform(scrollYProgress, [0, 1], ['0%', '25%'])
   const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0])
+
+  function handleExploreLibrary() {
+    if (session) {
+      router.push('/library')
+    } else {
+      router.push('/auth/signin')
+    }
+  }
+
+  function handleOpenReader() {
+    scrollToSection('reader')
+  }
 
   return (
     <section
@@ -126,7 +147,10 @@ export default function HeroSection() {
               transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
               className="flex flex-wrap gap-4 mb-14"
             >
-              <button className="group flex items-center gap-2 px-7 py-3.5 rounded-xl bg-bv-gold text-bv-bg font-semibold text-sm hover:bg-bv-gold-light transition-all duration-200 shadow-gold-sm hover:shadow-gold hover:-translate-y-0.5 active:translate-y-0">
+              <button
+                onClick={handleExploreLibrary}
+                className="group flex items-center gap-2 px-7 py-3.5 rounded-xl bg-bv-gold text-bv-bg font-semibold text-sm hover:bg-bv-gold-light transition-all duration-200 shadow-gold-sm hover:shadow-gold hover:-translate-y-0.5 active:translate-y-0"
+              >
                 Explore Library
                 <svg
                   className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-200"
@@ -139,7 +163,10 @@ export default function HeroSection() {
                 </svg>
               </button>
 
-              <button className="flex items-center gap-2 px-7 py-3.5 rounded-xl border border-bv-border text-bv-text font-medium text-sm hover:border-bv-gold/40 hover:bg-bv-elevated transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0">
+              <button
+                onClick={handleOpenReader}
+                className="flex items-center gap-2 px-7 py-3.5 rounded-xl border border-bv-border text-bv-text font-medium text-sm hover:border-bv-gold/40 hover:bg-bv-elevated transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
+              >
                 Open Reader
                 <svg
                   className="w-4 h-4 text-bv-muted"

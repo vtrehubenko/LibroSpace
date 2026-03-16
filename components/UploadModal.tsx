@@ -5,8 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useUploadThing } from '@/lib/uploadthing-client'
 import type { LibraryFile } from '@prisma/client'
 import { toast } from 'sonner'
-
-const CATEGORIES = ['Programming', 'Frontend', 'Design', 'Notes', 'Science', 'Fiction', 'History', 'Other']
+import { CATEGORIES } from '@/lib/categories'
 
 interface UploadModalProps {
   open: boolean
@@ -20,7 +19,7 @@ export default function UploadModal({ open, onClose, onSuccess }: UploadModalPro
   const [step, setStep] = useState<Step>('form')
   const [title, setTitle] = useState('')
   const [author, setAuthor] = useState('')
-  const [category, setCategory] = useState('Programming')
+  const [category, setCategory] = useState('Other')
   const [bookFile, setBookFile] = useState<File | null>(null)
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState(0)
