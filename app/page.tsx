@@ -11,7 +11,7 @@ import Footer from '@/components/Footer'
 
 export default async function Home() {
   const session = await getServerSession(authOptions)
-  if (session) redirect('/library')
+  if (session) redirect('/feed')
   return (
     <main className="min-h-screen bg-bv-bg overflow-x-hidden">
       <Navbar />
