@@ -22,7 +22,10 @@
       "Bash(ls -la /c/Users/Vova/Desktop/Projects/LibroSpace/app/api/books/[id]/highlights/[highlightId]/)",
       "Bash(netstat -ano)",
       "Bash(powershell.exe -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object OwningProcess\")",
-      "Bash(powershell.exe -Command 'Stop-Process -Id 1136 -Force')"
+      "Bash(powershell.exe -Command 'Stop-Process -Id 1136 -Force')",
+      "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/follow\")",
+      "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/friend-request\")",
+      "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/block\")"
     ]
   }
 }

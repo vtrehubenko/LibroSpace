@@ -7,17 +7,90 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum BookSource {
+  GOOGLE_BOOKS
+  OPEN_LIBRARY
+  USER_CREATED
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum PostType {
+  TEXT
+  REVIEW
+  QUOTE
+  RECOMMENDATION_LIST
+  IMAGE
+}
+
+enum PostVisibility {
+  PUBLIC
+  FRIENDS_ONLY
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String?
   name      String?
   image     String?
+  username     String?   @unique
+  bio          String?
+  avatarUrl    String?
+  isPrivate    Boolean   @default(false)
+  isBanned     Boolean   @default(false)
+  shadowBanned Boolean   @default(false)
+  role         UserRole  @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   books      LibraryFile[]
   highlights Highlight[]
+  followedBy     Follow[]        @relation("Following")
+  following      Follow[]        @relation("Follower")
+  sentRequests   FriendRequest[] @relation("RequestSender")
+  receivedRequests FriendRequest[] @relation("RequestReceiver")
+  friendsOf      Friendship[]    @relation("FriendOf")
+  friendsWith    Friendship[]    @relation("FriendsWith")
+  blockedUsers   Block[]         @relation("Blocker")
+  blockedBy      Block[]         @relation("Blocked")
+  posts          Post[]          @relation("UserPosts")
+  likes          Like[]          @relation("UserLikes")
+  comments       Comment[]       @relation("UserComments")
+}
+
+model Book {
+  id            String     @id @default(cuid())
+  title         String
+  author        String
+  description   String?
+  coverUrl      String?
+  isbn          String?    @unique
+  publisher     String?
+  publishedDate String?
+  pageCount     Int?
+  categories    String[]   @default([])
+  source        BookSource @default(USER_CREATED)
+  externalId    String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  libraryFiles  LibraryFile[]
+  posts          Post[]          @relation("ReviewedBook")
+  postBookEntries PostBookEntry[]
+
+  @@index([externalId])
+  @@index([title, author])
 }
 
 model LibraryFile {
@@ -39,6 +112,8 @@ model LibraryFile {
   coverKey        String?
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId          String?
+  catalogBook     Book?     @relation(fields: [bookId], references: [id])
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -59,4 +134,135 @@ model Highlight {
   updatedAt DateTime @updatedAt
 
   @@index([bookId, userId])
+}
+
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followingId])
+}
+
+model FriendRequest {
+  id          String              @id @default(cuid())
+  senderId    String
+  sender      User                @relation("RequestSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User                @relation("RequestReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  status      FriendRequestStatus @default(PENDING)
+  createdAt   DateTime            @default(now())
+  respondedAt DateTime?
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+}
+
+model Friendship {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("FriendOf", fields: [userId], references: [id], onDelete: Cascade)
+  friendId  String
+  friend    User     @relation("FriendsWith", fields: [friendId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, friendId])
+  @@index([friendId])
+}
+
+model Block {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockedId])
+}
+
+model Post {
+  id            String         @id @default(cuid())
+  authorId      String
+  author        User           @relation("UserPosts", fields: [authorId], references: [id], onDelete: Cascade)
+  type          PostType
+  content       String
+  visibility    PostVisibility @default(PUBLIC)
+
+  // Review-specific
+  bookId        String?
+  book          Book?          @relation("ReviewedBook", fields: [bookId], references: [id])
+  rating        Int?
+
+  // Quote-specific
+  quoteText     String?
+  quoteSource   String?
+
+  // Image-specific
+  imageUrls     String[]       @default([])
+
+  // Moderation
+  hasContentWarning  Boolean   @default(false)
+  contentWarning     String?
+  isFlagged          Boolean   @default(false)
+  isHidden           Boolean   @default(false)
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  bookEntries   PostBookEntry[]
+  likes         Like[]
+  comments      Comment[]
+
+  @@index([authorId, createdAt])
+  @@index([bookId])
+  @@index([type])
+}
+
+model PostBookEntry {
+  id      String  @id @default(cuid())
+  postId  String
+  post    Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  bookId  String
+  book    Book    @relation(fields: [bookId], references: [id])
+  note    String?
+  order   Int
+
+  @@unique([postId, bookId])
+  @@index([postId])
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UserLikes", fields: [userId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, postId])
+  @@index([postId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  authorId  String
+  author    User     @relation("UserComments", fields: [authorId], references: [id], onDelete: Cascade)
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parentId  String?
+  parent    Comment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("CommentReplies")
+  content   String
+  isHidden  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([parentId])
 }

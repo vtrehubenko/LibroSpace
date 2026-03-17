@@ -3,12 +3,26 @@
 import { useState, useRef, useEffect } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function AppNavbar() {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [pendingCount, setPendingCount] = useState(0)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (session?.user) {
+      fetch('/api/users/me')
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.pendingRequestsCount) setPendingCount(data.pendingRequestsCount)
+        })
+        .catch(() => {})
+    }
+  }, [session?.user])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -23,6 +37,14 @@ export default function AppNavbar() {
   const initials = session?.user?.name
     ? session.user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : session?.user?.email?.[0]?.toUpperCase() ?? '?'
+
+  const activeStyle = 'text-bv-gold bg-bv-gold-subtle border border-bv-gold/20 font-medium'
+  const inactiveStyle = 'text-bv-muted hover:text-bv-text hover:bg-bv-elevated'
+
+  function navClass(href: string) {
+    const isActive = pathname === href || pathname.startsWith(href + '/')
+    return `flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${isActive ? activeStyle : inactiveStyle}`
+  }
 
   return (
     <header className="sticky top-0 z-40 bg-bv-bg/90 backdrop-blur-xl border-b border-bv-border h-14 flex items-center">
@@ -43,14 +65,36 @@ export default function AppNavbar() {
 
         {/* Center nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <Link
-            href="/library"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-bv-gold bg-bv-gold-subtle border border-bv-gold/20 font-medium"
-          >
+          <Link href="/search" className={navClass('/search')}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13..." />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
-            My Library
+            Search
+          </Link>
+          <Link href="/feed" className={navClass('/feed')}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+            Feed
+          </Link>
+          <Link href="/library" className={navClass('/library')}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Library
+          </Link>
+          <Link href="/friends" className={navClass('/friends')}>
+            <div className="relative">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              {pendingCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-bv-gold text-[9px] font-bold text-bv-bg flex items-center justify-center">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
+              )}
+            </div>
+            Friends
           </Link>
         </nav>
 
@@ -88,6 +132,41 @@ export default function AppNavbar() {
                     </p>
                   </div>
                   <div className="p-1.5">
+                    <Link
+                      href={session?.user?.username ? `/profile/${session.user.username}` : '/profile/edit'}
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-bv-muted hover:text-bv-text hover:bg-bv-elevated transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/search"
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-bv-muted hover:text-bv-text hover:bg-bv-elevated transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                      </svg>
+                      Search Users
+                    </Link>
+                    <Link
+                      href="/friends"
+                      className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-bv-muted hover:text-bv-text hover:bg-bv-elevated transition-colors"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                      </svg>
+                      Friends
+                      {pendingCount > 0 && (
+                        <span className="ml-auto text-xs bg-bv-gold text-bv-bg px-1.5 py-0.5 rounded-full font-medium">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </Link>
                     <Link
                       href="/library"
                       className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-bv-muted hover:text-bv-text hover:bg-bv-elevated transition-colors"
