@@ -3,11 +3,11 @@
 import { motion } from 'framer-motion'
 
 export const HIGHLIGHT_COLORS = [
-  { id: 'yellow', fill: 'rgba(255, 235, 59, 0.3)', dot: '#FFEB3B' },
-  { id: 'blue', fill: 'rgba(66, 165, 245, 0.3)', dot: '#42A5F5' },
-  { id: 'green', fill: 'rgba(102, 187, 106, 0.3)', dot: '#66BB6A' },
-  { id: 'pink', fill: 'rgba(236, 64, 122, 0.3)', dot: '#EC407A' },
-  { id: 'orange', fill: 'rgba(255, 167, 38, 0.3)', dot: '#FFA726' },
+  { id: 'yellow', fill: '#FFEB3B', dot: '#FFEB3B' },
+  { id: 'blue', fill: '#42A5F5', dot: '#42A5F5' },
+  { id: 'green', fill: '#66BB6A', dot: '#66BB6A' },
+  { id: 'pink', fill: '#EC407A', dot: '#EC407A' },
+  { id: 'orange', fill: '#FFA726', dot: '#FFA726' },
 ] as const
 
 interface HighlightPopoverProps {

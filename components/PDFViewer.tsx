@@ -30,6 +30,8 @@ interface PDFViewerProps {
   initialPage?: number
   theme: 'dark' | 'sepia' | 'light'
   themeColors: { bg: string; text: string }
+  jumpToPage?: number | null
+  onJumpComplete?: () => void
   onPageChange?: (page: number, total: number) => void
   onProgressUpdate?: (info: { percentage: number; estimatedMinutesLeft: number }) => void
 }
@@ -40,6 +42,8 @@ export default function PDFViewer({
   initialPage = 1,
   theme,
   themeColors,
+  jumpToPage,
+  onJumpComplete,
   onPageChange,
   onProgressUpdate,
 }: PDFViewerProps) {
@@ -103,6 +107,13 @@ export default function PDFViewer({
     },
     [numPages, onPageChange]
   )
+
+  // Jump to page (bookmark navigation)
+  useEffect(() => {
+    if (!jumpToPage || jumpToPage < 1) return
+    goToPage(jumpToPage)
+    onJumpComplete?.()
+  }, [jumpToPage]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Report progress + estimated reading time on page change
   useEffect(() => {

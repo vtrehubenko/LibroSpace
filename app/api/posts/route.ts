@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { PostType } from '@prisma/client'
 import {
   postWithIncludes,
   getFeedAuthorIds,
@@ -18,6 +19,10 @@ export async function GET(req: Request) {
   const cursor = searchParams.get('cursor')
   const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
   const authorId = searchParams.get('authorId')
+  const typeParam = searchParams.get('type')
+  const validType = typeParam && Object.values(PostType).includes(typeParam as PostType)
+    ? (typeParam as PostType)
+    : undefined
 
   let posts
 
@@ -45,6 +50,7 @@ export async function GET(req: Request) {
         authorId,
         isHidden: false,
         ...visibilityFilter,
+        ...(validType ? { type: validType } : {}),
         ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
       },
       include: {

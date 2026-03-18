@@ -17,23 +17,26 @@ interface EPUBViewerProps {
   bookId: string
   theme: 'dark' | 'sepia' | 'light'
   fontSize?: number
-  onLocationChange?: (percentage: number) => void
+  initialPercentage?: number
+  jumpToCfi?: string | null
+  onJumpComplete?: () => void
+  onLocationChange?: (percentage: number, currentPage: number, totalPages: number, cfi?: string) => void
   onProgressUpdate?: (info: { percentage: number; estimatedMinutesLeft: number }) => void
 }
 
 const THEME_STYLES = {
   dark: {
-    body: { background: '#0e0c0a !important', color: '#f0ebe3 !important' },
+    body: { background: '#0e0c0a !important', color: '#f0ebe3 !important', padding: '0 24px !important' },
     p: { color: '#f0ebe3 !important', lineHeight: '1.8' },
     a: { color: '#d4a853 !important' },
   },
   sepia: {
-    body: { background: '#f5e6c8 !important', color: '#5b4636 !important' },
+    body: { background: '#f5e6c8 !important', color: '#5b4636 !important', padding: '0 24px !important' },
     p: { color: '#5b4636 !important', lineHeight: '1.8' },
     a: { color: '#8a5c00 !important' },
   },
   light: {
-    body: { background: '#faf6ee !important', color: '#2c2417 !important' },
+    body: { background: '#faf6ee !important', color: '#2c2417 !important', padding: '0 24px !important' },
     p: { color: '#2c2417 !important', lineHeight: '1.8' },
     a: { color: '#8a5c00 !important' },
   },
@@ -60,6 +63,9 @@ export default function EPUBViewer({
   bookId,
   theme,
   fontSize = 16,
+  initialPercentage,
+  jumpToCfi,
+  onJumpComplete,
   onLocationChange,
   onProgressUpdate,
 }: EPUBViewerProps) {
@@ -70,10 +76,12 @@ export default function EPUBViewer({
   const totalLocationsRef = useRef(0)
   const themeRef = useRef(theme)
   const contentsRef = useRef<any>(null) // stores the epubjs contents object from the content hook
+  const totalPagesRef = useRef(0) // derived from locations.length()
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [percentage, setPercentage] = useState(0)
+  const [currentPage, setCurrentPage] = useState(1)
   const [direction, setDirection] = useState<'next' | 'prev' | null>(null)
 
   // Highlight state
@@ -94,8 +102,9 @@ export default function EPUBViewer({
   const calcReadingTime = useCallback(
     (pct: number) => {
       if (!locationsReadyRef.current || totalLocationsRef.current === 0) return
-      // Rough estimate: each location ≈ 1024 chars ≈ 200 words, at 250 WPM
-      const totalWords = (totalLocationsRef.current * 1024) / 5
+      // Each location ≈ 1024 chars, but ~40% is HTML markup
+      // Effective text chars ≈ 1024 * 0.6 = ~614 chars ≈ ~123 words per location
+      const totalWords = (totalLocationsRef.current * 1024 * 0.6) / 5
       const totalMinutes = totalWords / 250
       const minutesLeft = Math.max(0, Math.round(totalMinutes * (1 - pct / 100)))
       onProgressUpdate?.({ percentage: pct, estimatedMinutesLeft: minutesLeft })
@@ -122,9 +131,12 @@ export default function EPUBViewer({
         if (!active || !containerRef.current) return
 
         const { width, height } = containerRef.current.getBoundingClientRect()
+        // Scale content width with screen: 50% of viewport, clamped between 480–900px
+        const maxContentWidth = Math.min(Math.max(Math.floor(window.innerWidth * 0.5), 480), 900)
+        const cappedWidth = Math.min(Math.floor(width) || 800, maxContentWidth)
 
         const rendition = book.renderTo(containerRef.current, {
-          width: Math.floor(width) || 800,
+          width: cappedWidth,
           height: Math.floor(height) || 600,
           spread: 'none',
           flow: 'paginated',
@@ -173,23 +185,46 @@ export default function EPUBViewer({
           } catch {}
         })
 
-        await rendition.display()
-        if (active) setLoading(false)
-
-        // Track location changes
-        rendition.on('relocated', (location: any) => {
-          const pct = location?.start?.percentage ?? 0
-          const rounded = Math.round(pct * 100)
-          setPercentage(rounded)
-          onLocationChange?.(pct)
-          calcReadingTime(rounded)
-        })
-
-        // Generate locations for reading time (async, doesn't block)
-        book.locations.generate(1024).then(() => {
+        // Generate locations (needed for position restore and reading time)
+        try {
+          await book.locations.generate(1024)
           if (!active) return
           locationsReadyRef.current = true
           totalLocationsRef.current = (book.locations as any).length()
+          totalPagesRef.current = totalLocationsRef.current
+        } catch {
+          // Locations failed — book still works, just no position restore
+        }
+
+        // Display at saved position or beginning
+        if (initialPercentage && initialPercentage > 0 && initialPercentage < 1) {
+          const cfi = (book.locations as any)?.cfiFromPercentage?.(initialPercentage)
+          if (cfi) {
+            await rendition.display(cfi)
+          } else {
+            await rendition.display()
+          }
+        } else {
+          await rendition.display()
+        }
+        if (active) setLoading(false)
+
+        // Track location changes — derive page from percentage
+        rendition.on('relocated', (location: any) => {
+          if (!active) return
+
+          const pct = location?.start?.percentage ?? 0
+          const rounded = Math.round(pct * 100)
+          setPercentage(rounded)
+          calcReadingTime(rounded)
+
+          // Derive current page from percentage and total locations
+          const total = totalPagesRef.current
+          const derivedPage = total > 0 ? Math.max(1, Math.round(pct * total)) : 1
+          setCurrentPage(derivedPage)
+
+          const cfi = location?.start?.cfi ?? undefined
+          onLocationChange?.(pct, derivedPage, total, cfi)
         })
 
         // Text selection handler for highlights
@@ -223,7 +258,8 @@ export default function EPUBViewer({
           const { width: w, height: h } = entry.contentRect
           if (w && h) {
             try {
-              renditionRef.current?.resize(Math.floor(w), Math.floor(h))
+              const maxW = Math.min(Math.max(Math.floor(window.innerWidth * 0.5), 480), 900)
+              renditionRef.current?.resize(Math.min(Math.floor(w), maxW), Math.floor(h))
             } catch {}
           }
         })
@@ -281,7 +317,7 @@ export default function EPUBViewer({
           setSelectionPopover(null)
         },
         'hl',
-        { fill, 'fill-opacity': '0.3', 'mix-blend-mode': 'multiply' }
+        { fill, 'fill-opacity': '0.4', 'mix-blend-mode': 'normal' }
       )
     } catch {
       // CFI might be invalid for current content
@@ -364,6 +400,20 @@ export default function EPUBViewer({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Jump to CFI (bookmark navigation)
+  useEffect(() => {
+    if (!jumpToCfi || !renditionRef.current || loading) return
+    try {
+      renditionRef.current.display(jumpToCfi).then(() => {
+        onJumpComplete?.()
+      }).catch(() => {
+        onJumpComplete?.()
+      })
+    } catch {
+      onJumpComplete?.()
+    }
+  }, [jumpToCfi, loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Highlight actions
   const createHighlight = async (color: string) => {
@@ -476,7 +526,7 @@ export default function EPUBViewer({
         <div
           ref={containerRef}
           className="h-full w-full transition-all duration-300"
-          style={{ maxWidth: '720px', background: bg }}
+          style={{ maxWidth: '900px', background: bg }}
         />
       </div>
 
@@ -521,7 +571,7 @@ export default function EPUBViewer({
           </button>
 
           <span className="text-sm tabular-nums" style={{ color: textColor, opacity: 0.5 }}>
-            {percentage}%
+            {`Page ${currentPage} · ${percentage}%`}
           </span>
 
           <button

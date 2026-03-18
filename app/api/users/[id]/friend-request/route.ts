@@ -51,6 +51,17 @@ export async function POST(
     return NextResponse.json({ error: 'Friend request already sent' }, { status: 400 })
   }
 
+  // Clean up any old non-PENDING requests (e.g. ACCEPTED/DECLINED from a previous friendship)
+  await prisma.friendRequest.deleteMany({
+    where: {
+      OR: [
+        { senderId: currentUserId, receiverId: targetId },
+        { senderId: targetId, receiverId: currentUserId },
+      ],
+      status: { not: 'PENDING' },
+    },
+  })
+
   await prisma.friendRequest.create({
     data: { senderId: currentUserId, receiverId: targetId },
   })
@@ -110,6 +121,14 @@ export async function DELETE(
   const currentUserId = session.user.id
 
   await prisma.$transaction([
+    prisma.friendRequest.deleteMany({
+      where: {
+        OR: [
+          { senderId: currentUserId, receiverId: targetId },
+          { senderId: targetId, receiverId: currentUserId },
+        ],
+      },
+    }),
     prisma.friendship.deleteMany({
       where: { userId: currentUserId, friendId: targetId },
     }),

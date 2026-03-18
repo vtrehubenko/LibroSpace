@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { generateUniqueUsername } from '@/lib/username'
+import { createDefaultShelves } from '@/lib/shelves'
 
 export async function POST(req: Request) {
   try {
@@ -36,6 +37,8 @@ export async function POST(req: Request) {
       data: { name: name?.trim() || null, email, password: hashedPassword, username },
       select: { id: true, email: true, name: true, username: true },
     })
+
+    await createDefaultShelves(user.id)
 
     return NextResponse.json(user, { status: 201 })
   } catch {

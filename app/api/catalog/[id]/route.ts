@@ -13,5 +13,43 @@ export async function GET(
     return NextResponse.json({ error: 'Book not found' }, { status: 404 })
   }
 
-  return NextResponse.json(book)
+  const reviewStats = await prisma.post.aggregate({
+    where: {
+      bookId: params.id,
+      type: 'REVIEW',
+      isHidden: false,
+      author: { shadowBanned: false },
+    },
+    _avg: { rating: true },
+    _count: { id: true },
+  })
+
+  const [readCount, readingCount] = await Promise.all([
+    prisma.bookshelfEntry.count({
+      where: {
+        bookId: params.id,
+        shelf: { slug: 'read' },
+      },
+    }),
+    prisma.bookshelfEntry.count({
+      where: {
+        bookId: params.id,
+        shelf: { slug: 'currently-reading' },
+      },
+    }),
+  ])
+
+  return NextResponse.json({
+    ...book,
+    reviewStats: {
+      averageRating: reviewStats._avg.rating
+        ? Math.round(reviewStats._avg.rating * 10) / 10
+        : null,
+      totalReviews: reviewStats._count.id,
+    },
+    readerCounts: {
+      read: readCount,
+      reading: readingCount,
+    },
+  })
 }

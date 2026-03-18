@@ -38,6 +38,11 @@ enum PostVisibility {
   FRIENDS_ONLY
 }
 
+enum BookshelfType {
+  DEFAULT
+  CUSTOM
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -56,6 +61,7 @@ model User {
 
   books      LibraryFile[]
   highlights Highlight[]
+  bookmarks  Bookmark[]
   followedBy     Follow[]        @relation("Following")
   following      Follow[]        @relation("Follower")
   sentRequests   FriendRequest[] @relation("RequestSender")
@@ -67,6 +73,7 @@ model User {
   posts          Post[]          @relation("UserPosts")
   likes          Like[]          @relation("UserLikes")
   comments       Comment[]       @relation("UserComments")
+  shelves        Bookshelf[]
 }
 
 model Book {
@@ -88,6 +95,7 @@ model Book {
   libraryFiles  LibraryFile[]
   posts          Post[]          @relation("ReviewedBook")
   postBookEntries PostBookEntry[]
+  shelfEntries   BookshelfEntry[]
 
   @@index([externalId])
   @@index([title, author])
@@ -118,6 +126,23 @@ model LibraryFile {
   updatedAt       DateTime  @updatedAt
 
   highlights Highlight[]
+  bookmarks  Bookmark[]
+}
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  locator    String   // CFI for EPUB, page number for PDF
+  label      String?  // e.g. "Page 14 · 42%"
+  color      String   @default("gold")
+  pageNumber Int?     // visual page number at time of bookmarking
+  bookId     String
+  book       LibraryFile @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([bookId, userId, locator])
+  @@index([bookId, userId])
 }
 
 model Highlight {
@@ -265,4 +290,35 @@ model Comment {
 
   @@index([postId, createdAt])
   @@index([parentId])
+}
+
+model Bookshelf {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      BookshelfType  @default(CUSTOM)
+  slug      String
+  isPublic  Boolean        @default(true)
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+
+  entries   BookshelfEntry[]
+
+  @@unique([userId, slug])
+  @@index([userId, order])
+}
+
+model BookshelfEntry {
+  id       String    @id @default(cuid())
+  shelfId  String
+  shelf    Bookshelf @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  bookId   String
+  book     Book      @relation(fields: [bookId], references: [id])
+  addedAt  DateTime  @default(now())
+  note     String?
+
+  @@unique([shelfId, bookId])
+  @@index([shelfId, addedAt])
+  @@index([bookId])
 }
