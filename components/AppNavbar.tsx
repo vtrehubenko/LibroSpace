@@ -65,11 +65,11 @@ export default function AppNavbar() {
 
         {/* Center nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <Link href="/search" className={navClass('/search')}>
+          <Link href="/discover" className={navClass('/discover')}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
             </svg>
-            Search
+            Discover
           </Link>
           <Link href="/feed" className={navClass('/feed')}>
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -143,14 +143,14 @@ export default function AppNavbar() {
                       My Profile
                     </Link>
                     <Link
-                      href="/search"
+                      href="/discover"
                       className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-bv-muted hover:text-bv-text hover:bg-bv-elevated transition-colors"
                       onClick={() => setMenuOpen(false)}
                     >
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
                       </svg>
-                      Search Users
+                      Discover
                     </Link>
                     <Link
                       href="/friends"
