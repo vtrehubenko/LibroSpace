@@ -25,7 +25,18 @@
       "Bash(powershell.exe -Command 'Stop-Process -Id 1136 -Force')",
       "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/follow\")",
       "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/friend-request\")",
-      "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/block\")"
+      "Bash(mkdir -p \"C:/Users/Vova/Desktop/Projects/LibroSpace/app/api/users/[id]/block\")",
+      "Bash(ls:*)",
+      "Bash(mkdir -p /c/Users/Vova/Desktop/Projects/LibroSpace/app/api/books/[id]/reviews)",
+      "Bash(mkdir -p /c/Users/Vova/Desktop/Projects/LibroSpace/app/api/books/[id]/shelves)",
+      "Bash(grep -r \"epubjs\\\\|Epub\\\\|rendition\" /c/Users/Vova/Desktop/Projects/LibroSpace --include=*.ts --include=*.tsx -l)",
+      "Bash(find /c/Users/Vova/Desktop/projects/librospace -type f -name *shelf*)",
+      "Bash(find /c/Users/Vova/Desktop/projects/librospace/src -type f -name *.ts -o -name *.tsx)",
+      "Bash(grep -r \"\\\\`/book/\" /c/Users/Vova/Desktop/projects/librospace --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(find /c/Users/Vova/Desktop/projects/librospace/app -name *book* -type f)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(find /c/Users/Vova/Desktop/projects/librospace/app -path */book/* -type f)",
+      "Bash(git checkout:*)"
     ]
   }
 }
