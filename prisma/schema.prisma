@@ -43,6 +43,22 @@ enum BookshelfType {
   CUSTOM
 }
 
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  BOOK_SHARE
+}
+
+enum ConversationMemberRole {
+  MEMBER
+  ADMIN
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -74,6 +90,9 @@ model User {
   likes          Like[]          @relation("UserLikes")
   comments       Comment[]       @relation("UserComments")
   shelves        Bookshelf[]
+  createdConversations Conversation[]       @relation("ConversationCreator")
+  conversationMembers  ConversationMember[]
+  sentMessages         Message[]            @relation("MessageSender")
 }
 
 model Book {
@@ -96,6 +115,7 @@ model Book {
   posts          Post[]          @relation("ReviewedBook")
   postBookEntries PostBookEntry[]
   shelfEntries   BookshelfEntry[]
+  sharedInMessages Message[] @relation("SharedBook")
 
   @@index([externalId])
   @@index([title, author])
@@ -321,4 +341,52 @@ model BookshelfEntry {
   @@unique([shelfId, bookId])
   @@index([shelfId, addedAt])
   @@index([bookId])
+}
+
+model Conversation {
+  id          String           @id @default(cuid())
+  type        ConversationType
+  name        String?          // only for GROUP, max 100 chars
+  createdById String
+  createdBy   User             @relation("ConversationCreator", fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt // bumped on new message
+
+  members  ConversationMember[]
+  messages Message[]
+
+  @@index([updatedAt])
+}
+
+model ConversationMember {
+  id             String                 @id @default(cuid())
+  conversationId String
+  conversation   Conversation           @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role           ConversationMemberRole @default(MEMBER)
+  joinedAt       DateTime               @default(now())
+  lastReadAt     DateTime?              // for unread tracking
+  isMuted        Boolean                @default(false)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}
+
+model Message {
+  id             String      @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User        @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content        String      // max 5000 chars, enforced in API
+  type           MessageType @default(TEXT)
+  bookId         String?     // for BOOK_SHARE type
+  book           Book?       @relation("SharedBook", fields: [bookId], references: [id])
+  imageUrl       String?     // for IMAGE type
+  isDeleted      Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
 }
