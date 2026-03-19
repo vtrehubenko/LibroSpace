@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 interface ConnectionStatus {
@@ -21,6 +22,7 @@ interface Props {
 export default function ConnectionButton({ targetUserId, initialStatus }: Props) {
   const [status, setStatus] = useState(initialStatus)
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
 
   async function handleFollow() {
     setLoading(true)
@@ -95,6 +97,23 @@ export default function ConnectionButton({ targetUserId, initialStatus }: Props)
     }
   }
 
+  async function handleMessage() {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'DIRECT', targetUserId }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        router.push(`/messages/${data.id}`)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleBlock() {
     setLoading(true)
     try {
@@ -145,13 +164,22 @@ export default function ConnectionButton({ targetUserId, initialStatus }: Props)
       </button>
 
       {status.friends ? (
-        <button
-          onClick={handleUnfriend}
-          disabled={loading}
-          className="px-4 py-2 text-sm rounded-lg bg-bv-elevated text-bv-muted hover:bg-red-900/30 hover:text-red-300 transition-colors"
-        >
-          Friends ✓
-        </button>
+        <>
+          <button
+            onClick={handleMessage}
+            disabled={loading}
+            className="px-3 py-2 text-sm rounded-lg bg-bv-surface border border-bv-border text-bv-text hover:bg-bv-elevated transition-colors"
+          >
+            Message
+          </button>
+          <button
+            onClick={handleUnfriend}
+            disabled={loading}
+            className="px-4 py-2 text-sm rounded-lg bg-bv-elevated text-bv-muted hover:bg-red-900/30 hover:text-red-300 transition-colors"
+          >
+            Friends ✓
+          </button>
+        </>
       ) : status.pendingFriendRequestReceived ? (
         <div className="flex gap-1">
           <button
