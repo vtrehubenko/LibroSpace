@@ -51,9 +51,9 @@ LibroSpace aims to solve these issues by combining:
   -organizing books into shelves, done
   -tracking reading progress, done
 -Reading statuses:
-  -Want to Read
-  -Currently Reading
-  -Finished
+  -Want to Read, done
+  -Currently Reading, done
+  -Finished, done
 
 @Online Reader@
 - LibroSpace includes a built-in reader that allows users to read books directly in the browser.
@@ -66,15 +66,15 @@ LibroSpace aims to solve these issues by combining:
 
 @Book Discovery@
 - Users can discover books through:
- - search powered by Google Books API
- - curated recommendations
- - community activity
+ - search powered by Google Books API, done 80% should add some filters in Googhle Books library
+ - curated recommendations, kinda, idk need some more tests with recs
+ - community activity, done
 
 @User Profiles@
 - Every user has a public profile containing:
-  - username
+  - username, done
   - avatar
-  - bio
+  - bio, done
 - Reading statistics
   - Example stats:
   - books finished
@@ -84,10 +84,10 @@ LibroSpace aims to solve these issues by combining:
 @Social Features@
 LibroSpace includes social functionality that allows users to interact with each other.
 - Users can:
- - follow other readers
- - see activity updates
- - share books and recommendations
- - discover what others are reading
+ - follow other readers, done
+ - see activity updates, done
+ - share books and recommendations, done
+ - discover what others are reading, done
 - Example activity feed:
  - Vova finished "Dune"
  - Anna added 3 books to Science shelf
@@ -118,7 +118,7 @@ To encourage consistent reading, the platform will include gamification elements
 Landing page, done
 Authentication, done
 Personal library, done
-Book search (Google Books API)
+Book search (Google Books API), done
 Basic reader functionality, done
 
 @Phase 2 — Social Layer@
